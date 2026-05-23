@@ -1,0 +1,28 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "smart-baby-band",
+          "appId": "1:634554212692:android:1d1616bb276353ab08e8c1",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "smart-baby-band",
+          "configurations": {
+            "android": "1:634554212692:android:1d1616bb276353ab08e8c1",
+            "ios": "1:634554212692:ios:2f1f4e9475f1ed5a08e8c1",
+            "macos": "1:634554212692:ios:2f1f4e9475f1ed5a08e8c1",
+            "web": "1:634554212692:web:0db1570b1f3ae68908e8c1",
+            "windows": "1:634554212692:web:dbdfb487e9ffabe508e8c1"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  }
+}

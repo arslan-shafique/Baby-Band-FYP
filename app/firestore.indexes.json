@@ -1,0 +1,74 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "cry_events",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "baby_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "timestamp",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "sleep_sessions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "device_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "timestamp",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "environment_logs",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "device_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "timestamp",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "sensor_data",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "device_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "timestamp",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "notifications",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "user_id",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "created_at",
+                    "order": "DESCENDING"
+                }
+            ]
+        }
+    ]
+}
