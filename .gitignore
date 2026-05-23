@@ -1,0 +1,23 @@
+.venv/
+venv/
+*.pyc
+__pycache__/
+ml_model/data/raw/
+ml_model/models/*.h5
+ml_model/models/*.tflite
+node_modules/
+.env
+
+/ml_model/data/
+/ml_model/models/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MQTT Credentials (NEVER COMMIT THIS!)
+mqtt-credentials/
