@@ -1,0 +1,37 @@
+# Environment variables
+.env
+
+# Firebase and MQTT credentials (NEVER commit these!)
+firebase-service-account.json
+*.json
+!package.json
+certs/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ML model files (too large for git)
+ml_models/*.tflite
+ml_models/*.h5
+ml_models/*.pb
+
+# Logs
+*.log

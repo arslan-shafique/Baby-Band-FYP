@@ -1,0 +1,31 @@
+# ── Core Framework ────────────────────────────────────
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+
+# ── Firebase ──────────────────────────────────────────
+firebase-admin==6.5.0
+
+# ── Data Validation ───────────────────────────────────
+pydantic==2.9.0
+pydantic-settings==2.5.0
+
+# ── Environment & Config ─────────────────────────────
+python-dotenv==1.0.0
+python-multipart==0.0.9
+
+# ── HTTP Client ───────────────────────────────────────
+httpx==0.27.0
+
+# ── MQTT Client ───────────────────────────────────────
+paho-mqtt==1.6.1
+
+# ── ML Inference (uncomment when ready for Phase 4) ──
+numpy==1.26.4
+tensorflow==2.16.1
+librosa==0.10.1
+soundfile==0.12.1
+pandas==2.2.0
+
+# ── Testing ───────────────────────────────────────────
+pytest==8.3.0
+pytest-asyncio==0.23.0

@@ -1,0 +1,126 @@
+# 🍼 Smart Baby Band — Backend API
+
+> FastAPI + Firebase backend for the Smart Baby Band IoT wearable.
+
+---
+
+## 🏗️ Architecture
+
+```
+ESP32 → MQTT → AWS IoT Core → Lambda → Firestore ← Flutter (real-time)
+                                                   ← FastAPI (ML + reports)
+```
+
+| Component | Role |
+|-----------|------|
+| **FastAPI** | ML inference, reports, complex queries |
+| **Firebase Auth** | User authentication (login/register from Flutter) |
+| **Firestore** | Real-time database for all sensor/event data |
+| **AWS Lambda** | Bridges MQTT sensor data from IoT Core to Firestore |
+| **AWS IoT Core** | MQTT broker for ESP32 communication |
+
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Python 3.10+
+- Firebase project with Firestore enabled
+- Firebase service account key (JSON)
+
+### 2. Setup
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Copy environment file
+cp .env.example .env
+
+# Place your Firebase service account key
+# Download from: Firebase Console → Project Settings → Service Accounts
+# Save as: backend/firebase-service-account.json
+```
+
+### 3. Run the Server
+
+```bash
+# From the backend/ directory
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### 4. View API Documentation
+
+Open in browser: **http://localhost:8000/docs** (Swagger UI)
+
+---
+
+## 📂 Project Structure
+
+```
+backend/
+├── app/
+│   ├── main.py              # FastAPI entry point
+│   ├── config.py             # Environment settings
+│   ├── firebase_client.py    # Firebase Admin SDK setup
+│   ├── models/               # Firestore document type hints
+│   ├── schemas/              # Pydantic validation models
+│   ├── routes/               # API endpoint definitions
+│   ├── services/             # Business logic layer
+│   ├── middleware/            # Firebase Auth token verification
+│   └── utils/                # Helper functions
+├── lambda/                   # AWS Lambda functions
+├── ml_models/                # TFLite model files
+├── tests/                    # Test files
+├── .env.example              # Example environment config
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
+```
+
+---
+
+## 🔌 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Health check |
+| `GET` | `/api/health` | Health check + Firebase status |
+| `GET` | `/api/auth/profile` | Get user profile |
+| `PUT` | `/api/auth/settings` | Update user settings |
+| `GET/POST` | `/api/baby/profile` | Baby profile CRUD |
+| `GET` | `/api/sensor/latest/{baby_id}` | Latest sensor reading |
+| `GET` | `/api/sensor/history/{baby_id}` | Sensor history |
+| `POST` | `/api/cry/classify` | ML cry classification |
+| `GET` | `/api/cry/history/{baby_id}` | Cry event history |
+| `GET` | `/api/sleep/history/{baby_id}` | Sleep session history |
+| `GET` | `/api/notifications/` | User notifications |
+| `GET` | `/api/reports/weekly/{baby_id}` | Weekly health report |
+| `GET` | `/api/reports/dashboard/{baby_id}` | Dashboard summary |
+
+---
+
+## 🔒 Authentication
+
+All endpoints (except health checks) require a Firebase Auth ID token:
+
+```
+Authorization: Bearer <firebase_id_token>
+```
+
+The Flutter app gets this token from Firebase Auth after login.
+
+---
+
+## 👨‍💻 Team
+
+- **Umair Imran** — AI/ML Engineer & Backend Developer
+- **Arslan Shafique** — Hardware Developer (ESP32 + Sensors)
+- **Uzair Ghaffar** — Mobile App Developer (Flutter)
