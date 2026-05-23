@@ -187,3 +187,6 @@ It reflects practical industry-ready skills in IoT, AI systems, and cloud integr
 Academic Research Project – University of Central Punjab (2025)
 
 For demonstration and educational purposes.
+## Repository Note
+
+This repository is a cleaned and modified version prepared by Arslan Shafique for project documentation, setup, and deployment. Sensitive credentials and local machine paths have been removed.
