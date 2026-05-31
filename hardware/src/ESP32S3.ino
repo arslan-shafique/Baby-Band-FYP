@@ -3,7 +3,6 @@
 #include <math.h>
 #include <string.h>
 #include <WiFi.h>
-// AWS REMOVED: #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include <HTTPClient.h>
 #include "driver/i2s.h"
@@ -19,97 +18,19 @@
 #include <heartRate.h>
 
 // =========================
-// WIFI / AWS IOT 
+// WIFI / LOCAL MQTT / FASTAPI
 // =========================
-const char* ssid = "Note 10";
-const char* password = "23456789";
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
 
-const char* mqtt_server = "10.184.183.100";
+const char* mqtt_server = "YOUR_LAPTOP_IP";
 const int mqtt_port = 1883;
 const char* mqtt_client_id = "ESP32_001";
 const char* mqtt_topic = "babyband/01/data";
-const char* audio_post_url = "http://10.184.183.100:8000/predict";
+const char* audio_post_url = "http://YOUR_LAPTOP_IP:8000/predict";
 const uint32_t audio_post_timeout_ms = 15000;
 const uint32_t wifi_connect_timeout_ms = 10000;
 const uint32_t mqtt_connect_timeout_ms = 5000;
-
-// Amazon Root CA
-/* AWS REMOVED: 
-static const char AMAZON_ROOT_CA[] PROGMEM = R"EOF(-----BEGIN CERTIFICATE-----
-MIIDQTCCAimgAwIBAgITBmyfz5m/jAo54vB4ikPmljZbyjANBgkqhkiG9w0BAQsF
-ADA5MQswCQYDVQQGEwJVUzEPMA0GA1UEChMGQW1hem9uMRkwFwYDVQQDExBBbWF6
-b24gUm9vdCBDQSAxMB4XDTE1MDUyNjAwMDAwMFoXDTM4MDExNzAwMDAwMFowOTEL
-MAkGA1UEBhMCVVMxDzANBgNVBAoTBkFtYXpvbjEZMBcGA1UEAxMQQW1hem9uIFJv
-b3QgQ0EgMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALJ4gHHKeNXj
-ca9HgFB0fW7Y14h29Jlo91ghYPl0hAEvrAIthtOgQ3pOsqTQNroBvo3bSMgHFzZM
-9O6II8c+6zf1tRn4SWiw3te5djgdYZ6k/oI2peVKVuRF4fn9tBb6dNqcmzU5L/qw
-IFAGbHrQgLKm+a/sRxmPUDgH3KKHOVj4utWp+UhnMJbulHheb4mjUcAwhmahRWa6
-VOujw5H5SNz/0egwLX0tdHA114gk957EWW67c4cX8jJGKLhD+rcdqsq08p8kDi1L
-93FcXmn/6pUCyziKrlA4b9v7LWIbxcceVOF34GfID5yHI9Y/QCB/IIDEgEw+OyQm
-jgSubJrIqg0CAwEAAaNCMEAwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
-AYYwHQYDVR0OBBYEFIQYzIU07LwMlJQuCFmcx7IQTgoIMA0GCSqGSIb3DQEBCwUA
-A4IBAQCY8jdaQZChGsV2USggNiMOruYou6r4lK5IpDB/G/wkjUu0yKGX9rbxenDI
-U5PMCCjjmCXPI6T53iHTfIUJrU6adTrCC2qJeHZERxhlbI1Bjjt/msv0tadQ1wUs
-N+gDS63pYaACbvXy8MWy7Vu33PqUXHeeE6V/Uq2V8viTO96LXFvKWlJbYK8U90vv
-o/ufQJVtMVT8QtPHRh8jrdkPSHCa2XV4cdFyQzR1bldZwgJcJmApzyMZFo6IQ6XU
-5MsI+yMRQ+hDKXJioaldXgjUkK642M4UwtBV8ob2xJNDd2ZhwLnoQdeXeGADbkpy
-rqXRfboQnoZsG4q5WTP468SQvvG5
------END CERTIFICATE-----
-)EOF";
-
-// Device Certificate
-static const char DEVICE_CERT[] PROGMEM = R"KEY(-----BEGIN CERTIFICATE-----
-MIIDWTCCAkGgAwIBAgIUbTkZnpVvmtFewZkDwnjsVbnKvpkwDQYJKoZIhvcNAQEL
-BQAwTTFLMEkGA1UECwxCQW1hem9uIFdlYiBTZXJ2aWNlcyBPPUFtYXpvbi5jb20g
-SW5jLiBMPVNlYXR0bGUgU1Q9V2FzaGluZ3RvbiBDPVVTMB4XDTI2MDQwMzE0MjQz
-OFoXDTQ5MTIzMTIzNTk1OVowHjEcMBoGA1UEAwwTQVdTIElvVCBDZXJ0aWZpY2F0
-ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKLvwdy+IxAhVa4VY4DW
-FfUf7MZD1+Tp/FCJf84H31V8QPom9tPSq1xxLUkuvvHw0XOMDRz+UQ4cGj8uwTDC
-MbX7PTc1n7eFL12mwaruuXJjqhk4AWGQ0tYplEvWcrJOaQkcOfeUNyFVVQT4jNlI
-Vng1Z4VE4wvwlF2VOr8jS4V/2oaZIgXP7Zx9C0Oin5aIhCFyWt9yAioooe2DqFco
-S1sPndQpj2b7xHoUHjxI8HRf34F9IzvqDmpHEWnE3TNDITk30zLtH/cs+RWKNsbd
-Wl7wYaV1yBY4xKVePZlZBIKAEu7cuRhikQu4ZPvAadsVEgnvLk5t9Nt8OXhPFDlp
-L7sCAwEAAaNgMF4wHwYDVR0jBBgwFoAU9RQA/kh70lbbB5a1I/zdUbPEGl8wHQYD
-VR0OBBYEFCaIu9XV5lxQ4u+VhGLyJOWTYZ1oMAwGA1UdEwEB/wQCMAAwDgYDVR0P
-AQH/BAQDAgeAMA0GCSqGSIb3DQEBCwUAA4IBAQAI7HzMVZF23/MSpM1r7TxVWoOa
-deSZVPn8y308nWK/eYT+W5XnQZLOGvCmKnFpVEgSxt10z2lGNMQeAb3Ln0Nev6A9
-lD2kjQECnsWF75dz1JJQJnEhfJBxJQJIrsGj+FexLEVhzW58nLiIk8lJBw1rd+GZ
-aU6UxT5L4zSn8r9rr6QqQY1pWS2l8Z0mzTVnlloZLQiqQxmiCVfDxD8q4UCLcBXs
-kKw9wzgppbtCWuooT7kggMwSTUvM7KfVAc+9sLZbzzcqoeYAZt4GVeBl+s07wldd
-VR7uiAdGum0K1Fwhn1CaKp3Syxxw0bnqACHjTjhEWjV83iIr7Cs6mofdNVFy
------END CERTIFICATE-----
-)KEY";
-
-// Device Private Key
-static const char DEVICE_PRIVATE_KEY[] PROGMEM = R"KEY(-----BEGIN RSA PRIVATE KEY-----
-MIIEpAIBAAKCAQEAou/B3L4jECFVrhVjgNYV9R/sxkPX5On8UIl/zgffVXxA+ib2
-09KrXHEtSS6+8fDRc4wNHP5RDhwaPy7BMMIxtfs9NzWft4UvXabBqu65cmOqGTgB
-YZDS1imUS9Zysk5pCRw595Q3IVVVBPiM2UhWeDVnhUTjC/CUXZU6vyNLhX/ahpki
-Bc/tnH0LQ6KfloiEIXJa33ICKiih7YOoVyhLWw+d1CmPZvvEehQePEjwdF/fgX0j
-O+oOakcRacTdM0MhOTfTMu0f9yz5FYo2xt1aXvBhpXXIFjjEpV49mVkEgoAS7ty5
-GGKRC7hk+8Bp2xUSCe8uTm3023w5eE8UOWkvuwIDAQABAoIBAQCVOk9sk/vbDxzA
-1rgOTIVJvtaFc6ds8dx0CqqyEUW7rpR4R21y7ZSiksluKFEbl3rNf+yWrFmiOZzU
-V0b7GDCdQqB7SzKfy2xpMoxXuFLCcINem4uwRwrCuMwodR0RL31FqcNxfB7N+bBn
-YBjn/Det2wOX7FKiIdJQr5dhbbsCZXNSxAkyud+U/gOypNALZSwjeQUDjV7tmeGV
-2o05znfHiGzPXznYrpB+NKPi5kgD5RkmOLCoX7EFkcDHuciPumZC3pzq8E4S+cHR
-4jELu8DB6v8IKuXsxGII+dnycgkOapd5TCG6AmidFClILLtLt2tRspzaV8xkNmEZ
-kMfrSGepAoGBANVFBQzOnYLfuZc/ZLtMlD5xPkADZz1hZ1Eta5NjOyfyRBgOJI27
-uQFHJNPGIocYbQzEcqRRwq5HldKc3bpZJTT3I4lNNImJk1rRsTtbhbAt2ExMFxq9
-e39LP6v6kctpp0Ict8L60Jc06nUhOG64oPEg5rfSBQCZwpD9HBB+RDRVAoGBAMOV
-EJ4g35sT6rfop0K8tDWL8iGfFr9C160bQ0cak8zrNL1K1AaljFRL2+fpUWdIBq0+
-QU1LheMO3pTDq8LrtdbO4ZuyxAjvO280yadk7Kcvs1FmaaAFFFV2us9gaj0rEZNB
-cBO37xZjGobeUp6CTHNohg+4YLgwH9npx3217mPPAoGAFA/jErpY/Ne46K5w9mGU
-zG7wsSrgylhgVLWWGg5KoU5b83tZGvAeziz4HOfVlanJkFrmgeijDKv1PxO8k+wQ
-4POipybZG1sSvoddSb0pTVJyt3Ks9bn/ZREaEz6F+oGc105GRxQ7DQ5QQ+Z1HY1G
-roguy/n4uH6+W89DlZWbKuUCgYEAqu9XLLzScTkBBWci+CLw5XPAVT4zpUmIMlUH
-gddqochXubDyijSZ5vq94Xx7lubOXw9wB1wgUggm5KH3Nk7ICEubxnaA+sYLje/2
-5oRAiQYZlOULH74QvXkdYC2F7Jv9qlOg3rr9DPXks0cPslVy99K8iHS+o3v7+npl
-zir5hOUCgYAqTxGdvE4zWsH1oH9c3vmAZo4B7G3gjKH4E8yJAg/baox4VJWooVEN
-avK04588DicUVFxSiidvd7kftJkFdrE7kS800cwBN5fxc2mZzqAMyAz4bHv1wYOB
-+qpSVNVJbid3f9CE8/rO3KBP9Q/akZ2FhyuHDor8dZbWSdYzpGqpLg==
------END RSA PRIVATE KEY-----
-)KEY";
-*/
 
 // =========================
 // PIN DEFINITIONS
@@ -154,7 +75,7 @@ const unsigned long STATUS_PUBLISH_INTERVAL = 10000;
 
 const float MOTION_THRESHOLD = 0.18f;
 const float MOTION_BASELINE_ALPHA = 0.95f;
-const long  FINGER_IR_THRESHOLD = 7000;
+const long  FINGER_IR_THRESHOLD = 50000;
 
 const char* DEVICE_ID = "babyband_01";
 
@@ -168,6 +89,7 @@ MAX30105 particleSensor;
 bool mpuReady = false;
 bool bmeReady = false;
 bool maxReady = false;
+SemaphoreHandle_t i2cMutex = NULL;
 
 // =========================
 // MQTT / WIFI OBJECTS
@@ -224,7 +146,7 @@ unsigned long lastEnvRead = 0;
 unsigned long lastHeartRead = 0;
 unsigned long lastStatusPublish = 0;
 unsigned long lastMqttReconnectAttempt = 0;
-const unsigned long MQTT_RECONNECT_INTERVAL = 15000;  // 15s between reconnect attempts
+const unsigned long MQTT_RECONNECT_INTERVAL = 15000;  
 
 // =========================
 // MOTION BASELINE
@@ -235,9 +157,18 @@ float motionBaseY = 0.0f;
 float motionBaseZ = 1.0f;
 
 // =========================
-// HEART VARIABLES
+// HEART VARIABLES (BACKGROUND TASK)
 // =========================
-unsigned long lastBeatTime = 0;
+TaskHandle_t HeartRateTask = NULL;
+
+const byte RATE_SIZE = 4;
+byte rates[RATE_SIZE] = {0};
+byte rateSpot = 0;
+byte validRateCount = 0;
+
+long lastBeat = 0;
+float beatsPerMinute = 0.0f;
+int beatAvg = 0;
 
 // =========================
 // 10-SECOND AVERAGE WINDOWS
@@ -276,6 +207,8 @@ void audioCaptureTask(void* param);
 void audioUploadTask(void* param);
 bool uploadAudioHTTP(const int16_t* pcm, size_t sampleCount);
 
+void heartRateTaskCode(void* pvParameters);
+
 void setupWiFi();
 void setupMQTT();
 void reconnectMQTT();
@@ -295,6 +228,109 @@ void resetAverageWindows();
 
 String buildStatusPayload();
 
+
+// =========================
+// BACKGROUND HEART RATE TASK (CORE 0)
+// =========================
+void heartRateTaskCode(void* pvParameters) {
+  for (;;) {
+    if (maxReady) {
+      long irValue = 0;
+
+      if (i2cMutex && xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
+        irValue = particleSensor.getIR();
+        xSemaphoreGive(i2cMutex);
+      }
+
+      if (irValue < FINGER_IR_THRESHOLD) {
+        dataPacket.fingerDetected = false;
+        beatsPerMinute = 0.0f;
+        beatAvg = 0;
+        rateSpot = 0;
+        validRateCount = 0;
+
+        for (byte i = 0; i < RATE_SIZE; i++) {
+          rates[i] = 0;
+        }
+      } else {
+        dataPacket.fingerDetected = true;
+
+        if (checkForBeat(irValue)) {
+          long delta = millis() - lastBeat;
+          lastBeat = millis();
+
+          if (delta > 0) {
+            beatsPerMinute = 60.0f / (delta / 1000.0f);
+
+            // Avoid false low startup values and unrealistic spikes.
+            if (beatsPerMinute > 45.0f && beatsPerMinute < 180.0f) {
+              rates[rateSpot++] = (byte)beatsPerMinute;
+              rateSpot %= RATE_SIZE;
+
+              if (validRateCount < RATE_SIZE) {
+                validRateCount++;
+              }
+
+              int sum = 0;
+              for (byte x = 0; x < validRateCount; x++) {
+                sum += rates[x];
+              }
+
+              beatAvg = sum / validRateCount;
+            }
+          }
+        }
+      }
+
+      // Debug signal quality once per second.
+      // "swing" shows whether the IR signal is changing enough for beat detection.
+      static unsigned long lastDebug = 0;
+      static long irMin = 999999;
+      static long irMax = 0;
+
+      if (irValue < irMin) irMin = irValue;
+      if (irValue > irMax) irMax = irValue;
+
+      if (millis() - lastDebug > 1000) {
+        lastDebug = millis();
+
+        long irSwing = irMax - irMin;
+
+        Serial.print("[HEART TASK] IR=");
+        Serial.print(irValue);
+
+        Serial.print(" min=");
+        Serial.print(irMin);
+
+        Serial.print(" max=");
+        Serial.print(irMax);
+
+        Serial.print(" swing=");
+        Serial.print(irSwing);
+
+        Serial.print(" finger=");
+        Serial.print(dataPacket.fingerDetected ? "YES" : "NO");
+
+        Serial.print(" bpm=");
+        Serial.print(beatsPerMinute, 1);
+
+        Serial.print(" avg=");
+        Serial.print(beatAvg);
+
+        Serial.print(" count=");
+        Serial.println(validRateCount);
+
+        irMin = 999999;
+        irMax = 0;
+      }
+
+      vTaskDelay(pdMS_TO_TICKS(10));
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+  }
+}
+
 // =========================
 // SETUP
 // =========================
@@ -302,6 +338,12 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
   Serial.println("===== SMART BABY BAND LOCAL MQTT START =====");
+
+  i2cMutex = xSemaphoreCreateMutex();
+  if (i2cMutex == NULL) {
+    Serial.println("I2C mutex allocation failed");
+    while (1);
+  }
 
   initPacket();
   initI2CBus();
@@ -312,6 +354,16 @@ void setup() {
 
   setupWiFi();
   setupMQTT();
+
+  xTaskCreatePinnedToCore(
+    heartRateTaskCode,
+    "HeartRateTask",
+    4096,
+    NULL,
+    1,
+    &HeartRateTask,
+    0
+  );
 
   Serial.println("===== SYSTEM READY =====");
 }
@@ -568,22 +620,18 @@ void initBME280() {
 void initMAX30102() {
   Serial.println("Initializing MAX30102...");
 
-  if (!particleSensor.begin(Wire, I2C_SPEED_STANDARD)) {
+  if (!particleSensor.begin(Wire, I2C_SPEED_FAST)) {
     Serial.println("MAX30102 not detected!");
     maxReady = false;
     return;
   }
 
-  byte ledBrightness = 90;
-  byte sampleAverage = 4;
-  byte ledMode = 2;
-  int sampleRate = 100;
-  int pulseWidth = 411;
-  int adcRange = 4096;
-
-  particleSensor.setup(ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange);
-  particleSensor.setPulseAmplitudeRed(0x24);
-  particleSensor.setPulseAmplitudeIR(0x24);
+  /*
+    Keep MAX30102 setup aligned with the previous working heart-rate code.
+    This default SparkFun setup is more stable with checkForBeat().
+  */
+  particleSensor.setup();
+  particleSensor.setPulseAmplitudeRed(0x0A);
   particleSensor.setPulseAmplitudeGreen(0);
 
   maxReady = true;
@@ -640,9 +688,11 @@ void updateAverageSnapshot() {
     dataPacket.envValid = false;
   }
 
-  if (heartBpmCount > 0) {
-    dataPacket.heartRateAvg = heartBpmSum / heartBpmCount;
-    dataPacket.heartRateVariance = (heartBpmSumSq / heartBpmCount) - (dataPacket.heartRateAvg * dataPacket.heartRateAvg);
+  // Heart rate is calculated continuously in heartRateTaskCode().
+  // Here we only snapshot the latest stable rolling average for MQTT JSON.
+  if (dataPacket.fingerDetected && beatAvg > 0) {
+    dataPacket.heartRateAvg = (float)beatAvg;
+    dataPacket.heartRateVariance = 0.0f;
     dataPacket.heartRateValid = true;
   } else {
     dataPacket.heartRateAvg = 0.0f;
@@ -668,9 +718,8 @@ void resetAverageWindows() {
   envHumiditySum = 0.0f;
   envSampleCount = 0;
 
-  heartBpmSum = 0.0f;
-  heartBpmSumSq = 0.0f;
-  heartBpmCount = 0;
+  // Do not reset the rolling heart-rate task values here.
+  // Heart rate needs continuity across publish windows.
 
   motionMagSum = 0.0f;
   motionMagSumSq = 0.0f;
@@ -684,8 +733,12 @@ void resetAverageWindows() {
 void readMotionSensor() {
   if (!mpuReady) return;
 
-  int16_t ax, ay, az;
-  mpu.getAcceleration(&ax, &ay, &az);
+  int16_t ax = 0, ay = 0, az = 0;
+
+  if (i2cMutex && xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
+    mpu.getAcceleration(&ax, &ay, &az);
+    xSemaphoreGive(i2cMutex);
+  }
 
   float accel_x = ax / 8192.0f;
   float accel_y = ay / 8192.0f;
@@ -727,8 +780,14 @@ void readEnvironmentSensor() {
     return;
   }
 
-  float temperature = bme.readTemperature();
-  float humidity = bme.readHumidity();
+  float temperature = 0.0f;
+  float humidity = 0.0f;
+
+  if (i2cMutex && xSemaphoreTake(i2cMutex, portMAX_DELAY)) {
+    temperature = bme.readTemperature();
+    humidity = bme.readHumidity();
+    xSemaphoreGive(i2cMutex);
+  }
 
   if (isnan(temperature) || isnan(humidity)) {
     dataPacket.envValid = false;
@@ -746,43 +805,22 @@ void readHeartRateSensor() {
   if (!maxReady) {
     dataPacket.fingerDetected = false;
     dataPacket.heartRateAvg = 0.0f;
+    dataPacket.heartRateVariance = 0.0f;
     dataPacket.heartRateValid = false;
     return;
   }
 
-  long irValue = particleSensor.getIR();
-  dataPacket.fingerDetected = (irValue > FINGER_IR_THRESHOLD);
-
-  if (!dataPacket.fingerDetected) {
-    heartBpmSum = 0.0f;
-    heartBpmSumSq = 0.0f;
-    heartBpmCount = 0;
-    lastBeatTime = 0;
-    updateAverageSnapshot();
-    return;
+  // Beat detection is handled continuously by heartRateTaskCode().
+  // This function only snapshots the latest stable average for publishing.
+  if (dataPacket.fingerDetected && beatAvg > 0) {
+    dataPacket.heartRateAvg = (float)beatAvg;
+    dataPacket.heartRateVariance = 0.0f;
+    dataPacket.heartRateValid = true;
+  } else {
+    dataPacket.heartRateAvg = 0.0f;
+    dataPacket.heartRateVariance = 0.0f;
+    dataPacket.heartRateValid = false;
   }
-
-  if (checkForBeat(irValue)) {
-    unsigned long now = millis();
-
-    if (lastBeatTime > 0) {
-      unsigned long delta = now - lastBeatTime;
-
-      if (delta > 0) {
-        float bpm = 60.0f / (delta / 1000.0f);
-
-        if (bpm > 40.0f && bpm < 220.0f) {
-          heartBpmSum += bpm;
-          heartBpmSumSq += (bpm * bpm);
-          heartBpmCount++;
-        }
-      }
-    }
-
-    lastBeatTime = now;
-  }
-
-  updateAverageSnapshot();
 }
 
 void readVitals(unsigned long now) {
