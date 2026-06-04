@@ -20,14 +20,14 @@
 // =========================
 // WIFI / LOCAL MQTT / FASTAPI
 // =========================
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
+const char* ssid = "Wifi";
+const char* password = "14141414";
 
-const char* mqtt_server = "YOUR_LAPTOP_IP";
+const char* mqtt_server = "192.168.10.12";
 const int mqtt_port = 1883;
 const char* mqtt_client_id = "ESP32_001";
 const char* mqtt_topic = "babyband/01/data";
-const char* audio_post_url = "http://YOUR_LAPTOP_IP:8000/predict";
+const char* audio_post_url = "http://192.168.10.12:8000/predict";
 const uint32_t audio_post_timeout_ms = 15000;
 const uint32_t wifi_connect_timeout_ms = 10000;
 const uint32_t mqtt_connect_timeout_ms = 5000;
@@ -60,12 +60,12 @@ const uint32_t mqtt_connect_timeout_ms = 5000;
 // =========================
 // THRESHOLDS / INTERVALS
 // =========================
-#define ENERGY_THRESHOLD  7000
-#define ZCR_MIN           35
-#define ZCR_MAX           110
-#define CRY_COUNT_TRIGGER 12
+#define ENERGY_THRESHOLD  150
+#define ZCR_MIN           20
+#define ZCR_MAX           175
+#define CRY_COUNT_TRIGGER 8
 #define CRY_COOLDOWN_MS   8000
-#define PEAK_THRESHOLD    14000
+#define PEAK_THRESHOLD    1200
 #define MOVEMENT_THRESHOLD 0.15f
 
 const unsigned long MOTION_INTERVAL = 200;
@@ -948,6 +948,8 @@ void runVAD() {
     lastVadLog = millis();
     Serial.print("[VAD] Energy=");
     Serial.print(energy, 1);
+    Serial.print(" Peak=");
+    Serial.print(peak);
     Serial.print(" ZCR=");
     Serial.print(zcr);
     Serial.print(" Count=");
@@ -1022,6 +1024,20 @@ void audioCaptureTask(void* param) {
   xSemaphoreGive(audioClipMutex);
   xSemaphoreGive(i2sMutex);
 
+  // After capturing samples, print first 10 values
+  Serial.println("[AUDIO DEBUG] First 10 samples:");
+  for(int i = 0; i < 10; i++) {
+      Serial.println(audioClipBuffer[i]);
+  }
+
+  // Print basic stats
+  int16_t minVal = audioClipBuffer[0], maxVal = audioClipBuffer[0];
+  for(int i = 0; i < FULL_AUDIO_SAMPLES; i++) {
+      if(audioClipBuffer[i] < minVal) minVal = audioClipBuffer[i];
+      if(audioClipBuffer[i] > maxVal) maxVal = audioClipBuffer[i];
+  }
+  Serial.printf("[AUDIO DEBUG] Min: %d, Max: %d\n", minVal, maxVal);
+
   if (!ok) {
     Serial.println("[AUDIO] Future capture failed");
     audioCaptureInProgress = false;
@@ -1064,6 +1080,12 @@ void audioUploadTask(void* param) {
     vTaskDelete(nullptr);
     return;
   }
+
+  Serial.println("=== START RAW AUDIO DUMP ===");
+  for (int i = 0; i < 10; i++) {
+    Serial.println(audioClipBuffer[i]);
+  }
+  Serial.println("=== END RAW AUDIO DUMP ===");
 
   if (uploadAudioHTTP(audioClipBuffer, FULL_AUDIO_SAMPLES)) {
     Serial.println("[HTTP] Upload success");
@@ -1154,7 +1176,7 @@ bool readI2SSamplesRaw(int16_t* dest, size_t sampleCount) {
 
     int samples = bytesRead / sizeof(int32_t);
     for (int i = 0; i < samples && index < sampleCount; i++) {
-      int16_t sample16 = (int16_t)(temp[i] >> 8);
+      int16_t sample16 = (int16_t)(temp[i] >> 16);
       dest[index++] = sample16;
     }
   }
